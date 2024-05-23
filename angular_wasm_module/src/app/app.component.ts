@@ -10,10 +10,11 @@ import {
   frontDocumentStatusMessage,
   WIDTH_TO_STANDARDS,
 } from 'src/utils';
-import { closeCamera } from '@privateid/cryptonets-web-sdk';
+import { closeCamera, switchCamera } from '@privateid/cryptonets-web-sdk';
 import { ScanFrontDocumentService } from 'src/hooks/useScanFrontDocumentWithoutPredict';
 import { IsValidService } from 'src/hooks/useIsValid';
-import { switchCamera } from '../../../privIDFHEModules';
+import { EnrollOneFaService } from 'src/hooks/useEnrollOneFa';
+import { DeleteService } from 'src/hooks/useDelete';
 
 interface Device {
   value: number;
@@ -41,6 +42,8 @@ export class AppComponent implements OnInit, OnDestroy {
   isShowBackDocument = false;
   isShowFrontDocument = false;
   isShowValid = false;
+  isShowEnroll = false;
+  isShowDelete = false;
   devices: Device[] = [];
   selectedCamera: number | undefined;
   barcodeStatusCode: number | undefined;
@@ -52,6 +55,11 @@ export class AppComponent implements OnInit, OnDestroy {
   antiSpoofPerformed: boolean | any = '';
   antiSpoofStatus: any = '';
   isvalidStatus: any = '';
+  enrollStatus: any = '';
+  enrollValidationStatus: any = '';
+  enrollMessage: any = '';
+  enrollPUID: any = '';
+  deleteStatus: any = '';
 
   private barcodeStatusCodeSubscription: Subscription | undefined;
   private scanCodeSubscription: Subscription | undefined;
@@ -60,13 +68,20 @@ export class AppComponent implements OnInit, OnDestroy {
   private antispoofPerformed: Subscription | undefined;
   private antispoofStatus: Subscription | undefined;
   private isValidStatus: Subscription | undefined;
+  private enrollStatusSubscription: Subscription | undefined;
+  private enrollValidationStatusSubscription: Subscription | undefined;
+  private enrollMessageSubscription: Subscription | undefined;
+  private enrollPUIDSubscription: Subscription | undefined;
+  private deleteStatusSubscription: Subscription | undefined;
 
   constructor(
     private scanBackDocumentService: ScanBackDocumentService,
     private scanFrontDocumentService: ScanFrontDocumentService,
     private cameraService: CameraService,
     private wasmService: WasmService,
-    private isValidService: IsValidService
+    private isValidService: IsValidService,
+    private enrollOneFaService: EnrollOneFaService,
+    private deleteService: DeleteService
   ) {}
 
   ngOnInit() {
@@ -139,6 +154,36 @@ export class AppComponent implements OnInit, OnDestroy {
       }
     );
 
+    this.enrollStatusSubscription = this.enrollOneFaService.enrollStatus$.subscribe(
+      (data: any) => {
+        this.enrollStatus = data;
+      }
+    );
+
+    this.enrollValidationStatusSubscription = this.enrollOneFaService.enrollValidationStatus$.subscribe(
+      (data: any) => {
+        this.enrollValidationStatus = data;
+      }
+    );
+
+    this.enrollMessageSubscription = this.enrollOneFaService.enrollMessage$.subscribe(
+      (data: any) => {
+        this.enrollStatus = data;
+      }
+    );
+
+    this.enrollPUIDSubscription = this.enrollOneFaService.enrollPUID$.subscribe(
+      (data: any) => {
+        this.enrollPUID = data;
+      }
+    );
+
+    this.deleteStatusSubscription = this.deleteService.deleteStatus$.subscribe(
+      (data: any) => {
+        this.deleteStatus = data;
+      }
+    );
+
   }
 
   ngOnDestroy() {
@@ -163,6 +208,21 @@ export class AppComponent implements OnInit, OnDestroy {
     }
     if (this.isValidStatus) {
       this.isValidStatus.unsubscribe();
+    }
+    if (this.enrollStatusSubscription) {
+      this.enrollStatusSubscription.unsubscribe();
+    }
+    if (this.enrollValidationStatusSubscription) {
+      this.enrollValidationStatusSubscription.unsubscribe();
+    }
+    if (this.enrollMessageSubscription) {
+      this.enrollMessageSubscription.unsubscribe();
+    }
+    if (this.enrollPUIDSubscription) {
+      this.enrollPUIDSubscription.unsubscribe();
+    }
+    if (this.deleteStatusSubscription) {
+      this.deleteStatusSubscription.unsubscribe();
     }
   }
 
@@ -220,6 +280,26 @@ export class AppComponent implements OnInit, OnDestroy {
     this.isShowValid = true;
     this.isShowFrontDocument = false;
     this.isShowBackDocument = false;
+    this.isShowDelete = false;
+    this.isShowEnroll = false;
     this.isValidService.isValidCall();
+  }
+
+  onEnrollOneFa() {
+    this.isShowEnroll = true;
+    this.isShowValid = false;
+    this.isShowFrontDocument = false;
+    this.isShowBackDocument = false;
+    this.isShowDelete = false;
+    this.enrollOneFaService.enrollUserOneFa();
+  }
+
+  onDelete() {
+    this.isShowDelete = true;
+    this.isShowEnroll = false;
+    this.isShowValid = false;
+    this.isShowFrontDocument = false;
+    this.isShowBackDocument = false;
+    this.deleteService.deleteUser(this.enrollPUID);
   }
 }

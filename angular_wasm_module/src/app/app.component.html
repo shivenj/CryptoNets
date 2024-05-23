@@ -107,8 +107,28 @@
     <p>Is Valid Status Code: {{ isvalidStatus }}</p>
   </div>
 
+  <div class="back-document-content" *ngIf="isShowEnroll">
+    <p>Antispoof Performed: {{ antiSpoofPerformed }}</p>
+    <p>Antispoof Status: {{ antiSpoofStatus }}</p>
+    <p>Enroll Status Code: {{ enrollStatus }}</p>
+    <p>Enroll Validation Status Code: {{ enrollValidationStatus }}</p>
+    <p>Enroll Message: {{ enrollMessage }}</p>
+    <p>Enroll PUID: {{ enrollPUID }}</p>
+  </div>
+
+  <div class="back-document-content" *ngIf="isShowDelete">
+    <p>Antispoof Performed: {{ antiSpoofPerformed }}</p>
+    <p>Antispoof Status: {{ antiSpoofStatus }}</p>
+    <p>Enroll Status Code: {{ enrollStatus }}</p>
+    <p>Enroll Validation Status Code: {{ enrollValidationStatus }}</p>
+    <p>Enroll Message: {{ enrollMessage }}</p>
+    <p>Enroll PUID: {{ enrollPUID }}</p>
+  </div>
+
   <div class="footer-wrap">
     <button (click)="onIsValid()">Is Valid</button>
+    <button (click)="onEnrollOneFa()">Enroll</button>
+    <button (click)="onDelete()">Delete</button>
     <button (click)="onFrontDocumentScan()">Scan front document</button>
     <button (click)="onBackDocumentScan()">Scan back document</button>
   </div>
