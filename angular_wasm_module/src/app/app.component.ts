@@ -166,11 +166,6 @@ export class AppComponent implements OnInit, OnDestroy {
       }
     );
 
-    this.enrollMessageSubscription = this.enrollOneFaService.enrollMessage$.subscribe(
-      (data: any) => {
-        this.enrollStatus = data;
-      }
-    );
 
     this.enrollPUIDSubscription = this.enrollOneFaService.enrollPUID$.subscribe(
       (data: any) => {

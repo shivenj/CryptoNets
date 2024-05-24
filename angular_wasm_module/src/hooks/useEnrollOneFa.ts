@@ -15,6 +15,7 @@ export class EnrollOneFaService {
   private enrollImageDataSubject = new BehaviorSubject<ImageData | null>(null);
   private enrollMessageSubject = new BehaviorSubject<string>('');
   private enrollStatusSubject = new BehaviorSubject<string>('');
+  private progressSubject = new BehaviorSubject<number>(0);
 
   private enrollCount = 0;
   private enrollTokenCurrent: string = '';
@@ -29,14 +30,14 @@ export class EnrollOneFaService {
   enrollImageData$: Observable<ImageData | null> = this.enrollImageDataSubject.asObservable();
   enrollMessage$: Observable<string> = this.enrollMessageSubject.asObservable();
   enrollStatus$: Observable<string> = this.enrollStatusSubject.asObservable();
+  progress$: Observable<number> = this.progressSubject.asObservable();
 
-  constructor() {
-  }
+  constructor() {}
 
   private callback = (result: any) => {
     console.log('enroll callback hook result:', result);
     console.log('skipping antispoof?', this.skipAntispoofProcess);
-    this.enrollStatusSubject.next(result.returnValue.status);
+    this.enrollStatusSubject.next(ENROLL_MESSAGE_OBJ[result.returnValue.validation_status?.[0]?.status]);
     if (result.returnValue.status === 0) {
       if (result.returnValue.guid && result.returnValue.puid) {
         this.enrollGUIDSubject.next(result.returnValue.guid);
@@ -45,66 +46,62 @@ export class EnrollOneFaService {
         this.enrollAntispoofStatusSubject.next('');
         this.enrollValidationStatusSubject.next('');
         this.enrollMessageSubject.next(result.returnValue.message);
-        // setShowSuccess(true);
-        // disableButtons(false);
+        // this.progressSubject.next(100);
         this.enrollCount++;
         console.log('Enroll Count:', this.enrollCount);
       } else {
-        if (result.returnValue.validation_status.length > 0) {
-          this.enrollTokenSubject.next(result.returnValue.validation_status[0].enroll_token);
-          this.enrollAntispoofPerformedSubject.next(result.returnValue.validation_status[0].anti_spoof_performed);
-          this.enrollAntispoofStatusSubject.next(result.returnValue.validation_status[0].anti_spoof_status);
-          this.enrollValidationStatusSubject.next(result.returnValue.validation_status[0].status);
-          this.enrollMessageSubject.next(result.returnValue.message);
+        this.handleValidationStatus(result.returnValue.validation_status, result.returnValue.message);
+      }
+    } else {
+      this.handleValidationStatus(result.returnValue.validation_status, result.returnValue.message);
+    }
+  };
 
-          if (this.skipAntispoofProcess) {
-            if (result.returnValue.validation_status[0].status === 0) {
-              this.enrollUserOneFa(result.returnValue.validation_status[0].enroll_token, this.skipAntispoofProcess);
-            } else {
-              this.enrollUserOneFa('', this.skipAntispoofProcess);
-            }
-          } else {
-            if (
-              result.returnValue.validation_status[0].anti_spoof_performed &&
-              result.returnValue.validation_status[0].anti_spoof_status === 0 &&
-              result.returnValue.validation_status[0].status === 0
-            ) {
-              if (result.returnValue.validation_status[0].enroll_token === this.enrollTokenCurrent && this.enrollTokenCurrent) {
-                this.enrollCount++;
-              } else {
-                this.enrollCount = 1;
-              }
-              this.enrollUserOneFa(result.returnValue.validation_status[0].enroll_token, this.skipAntispoofProcess);
-            } else {
-              this.enrollUserOneFa('', this.skipAntispoofProcess);
-            }
-          }
+  private handleValidationStatus(validationStatus: any[], message: string) {
+    if (validationStatus.length > 0) {
+      this.enrollTokenSubject.next(validationStatus[0].enroll_token);
+      this.enrollAntispoofPerformedSubject.next(validationStatus[0].anti_spoof_performed);
+      this.enrollAntispoofStatusSubject.next(validationStatus[0].anti_spoof_status);
+      this.enrollValidationStatusSubject.next(validationStatus[0].status);
+      this.enrollMessageSubject.next(message);
+      console.log(this.skipAntispoofProcess,'this.skipAntispoofProcess');
+      
+      if (this.skipAntispoofProcess) {
+        if (validationStatus[0].status === 0) {
+          this.enrollUserOneFa(validationStatus[0].enroll_token, this.skipAntispoofProcess);
         } else {
-          this.enrollTokenSubject.next('');
-          this.enrollAntispoofPerformedSubject.next('');
-          this.enrollAntispoofStatusSubject.next('');
-          this.enrollValidationStatusSubject.next('');
-          this.enrollMessageSubject.next('');
+          this.enrollUserOneFa('', this.skipAntispoofProcess);
+        }
+      } else {
+        if (
+          validationStatus[0].anti_spoof_performed &&
+          validationStatus[0].anti_spoof_status === 0 &&
+          validationStatus[0].status === 0
+        ) {
+          if (validationStatus[0].enroll_token === this.enrollTokenCurrent && this.enrollTokenCurrent) {
+            this.enrollCount++;
+          } else {
+            this.enrollCount = 1;
+          }
+          this.enrollUserOneFa(validationStatus[0].enroll_token, this.skipAntispoofProcess);
+        } else {
+          this.enrollUserOneFa(validationStatus[0].enroll_token, this.skipAntispoofProcess);
         }
       }
     } else {
-      if (result.returnValue.validation_status.length > 0) {
-        this.enrollTokenSubject.next(result.returnValue.validation_status[0].enroll_token);
-        this.enrollAntispoofPerformedSubject.next(result.returnValue.validation_status[0].anti_spoof_performed);
-        this.enrollAntispoofStatusSubject.next(result.returnValue.validation_status[0].anti_spoof_status);
-        this.enrollValidationStatusSubject.next(result.returnValue.validation_status[0].status);
-        this.enrollMessageSubject.next(result.returnValue.message);
-        this.enrollUserOneFa(result.returnValue.validation_status[0].enroll_token, this.skipAntispoofProcess);
-      } else {
-        this.enrollTokenSubject.next('');
-        this.enrollAntispoofPerformedSubject.next('');
-        this.enrollAntispoofStatusSubject.next('');
-        this.enrollValidationStatusSubject.next('');
-        this.enrollMessageSubject.next('');
-        this.enrollUserOneFa('', this.skipAntispoofProcess);
-      }
+      this.resetEnrollSubjects();
+      this.enrollUserOneFa('', this.skipAntispoofProcess);
     }
-  };
+  }
+
+  private resetEnrollSubjects() {
+    this.enrollTokenSubject.next('');
+    this.enrollAntispoofPerformedSubject.next('');
+    this.enrollAntispoofStatusSubject.next('');
+    this.enrollValidationStatusSubject.next('');
+    this.enrollMessageSubject.next('');
+    this.progressSubject.next(0);
+  }
 
   async enrollUserOneFa(token = '', skipAntispoof = false): Promise<void> {
     this.enrollTokenCurrent = token;
@@ -122,12 +119,13 @@ export class EnrollOneFaService {
         // this.enrollImageDataSubject.next(new ImageData(bestImage.imageData, bestImage.width, bestImage.height));
       }
     } catch (error) {
-      // Handle error if necessary
+      console.error(error);
+      this.resetEnrollSubjects();
     }
   }
 }
 
-export const ENROLL_MESSAGE_OBJ = {
+export const ENROLL_MESSAGE_OBJ: any = {
   [-100]: 'Looking for face',
   [-4]: 'Invalid Face',
   [-3]: 'Face Too Close To Edge',
