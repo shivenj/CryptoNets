@@ -60,6 +60,7 @@ export class AppComponent implements OnInit, OnDestroy {
   enrollMessage: any = '';
   enrollPUID: any = '';
   deleteStatus: any = '';
+  progress: any = '';
 
   private barcodeStatusCodeSubscription: Subscription | undefined;
   private scanCodeSubscription: Subscription | undefined;
@@ -73,6 +74,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private enrollMessageSubscription: Subscription | undefined;
   private enrollPUIDSubscription: Subscription | undefined;
   private deleteStatusSubscription: Subscription | undefined;
+  private progressSubscription: Subscription | undefined
 
   constructor(
     private scanBackDocumentService: ScanBackDocumentService,
@@ -166,6 +168,11 @@ export class AppComponent implements OnInit, OnDestroy {
       }
     );
 
+    this.progressSubscription = this.enrollOneFaService.progress$.subscribe(
+      (data: any) => {
+        this.progress = data;
+      }
+    );
 
     this.enrollPUIDSubscription = this.enrollOneFaService.enrollPUID$.subscribe(
       (data: any) => {
@@ -203,6 +210,9 @@ export class AppComponent implements OnInit, OnDestroy {
     }
     if (this.isValidStatus) {
       this.isValidStatus.unsubscribe();
+    }
+    if (this.progress) {
+      this.progress.unsubscribe();
     }
     if (this.enrollStatusSubscription) {
       this.enrollStatusSubscription.unsubscribe();
