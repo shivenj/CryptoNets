@@ -65,7 +65,7 @@ export class PredictOneFaService {
         }
         try {
             await predict1FA(this.callback, {
-                // skip_antispoof: skipAntispoof,
+                skip_antispoof: true,
                 input_image_format: 'rgba',
                 anti_spoofing_detect_document: false,
             } as any);
