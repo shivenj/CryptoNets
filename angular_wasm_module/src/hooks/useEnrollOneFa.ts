@@ -117,7 +117,7 @@ export class EnrollOneFaService {
       const config = {
         input_image_format: 'rgba',
         mf_token: token,
-        skip_antispoof: skipAntispoof,
+        skip_antispoof: true,
         anti_spoofing_detect_document: false,
       };
       const bestImage = await enroll1FA(this.callback, config);
