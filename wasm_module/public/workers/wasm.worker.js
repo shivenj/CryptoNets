@@ -42,11 +42,6 @@ const isLoad = (simd, url, key, debug_type, cacheConfig = true, timeout = 5000, 
       `${cdnUrl}/wasm/${ModuleName}/${modulePath}/version.json`,
       `../wasm/${ModuleName}/${modulePath}/version.json`,
     );
-
-    console.log(
-      `${cdnUrl}/wasm/${ModuleName}/${modulePath}/version.json`,
-      `../wasm/${ModuleName}/${modulePath}/version.json`,
-    );
     // const fetchdWasmVersion = await fetch(`../wasm/${ModuleName}/${modulePath}/version.json`);
     const fetchdVersion = await fetchdWasmVersion.json();
     console.log(
@@ -300,7 +295,6 @@ const FHE_enrollOnefa = async (imageData, simd, config, cb) => {
   const bestImageFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
   const bestImageLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
   wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
-  console.log("Config:", config);
   try {
     wasmPrivModule._privid_enroll_onefa(
       wasmSession /* session pointer */,
@@ -370,7 +364,6 @@ const FHE_predictOnefa = async (originalImages, simd, config, cb) => {
   const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
   // create a pointer to interger to hold the length of the output buffer
   const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-  console.log("Config:", config);
   try {
     await wasmPrivModule._privid_face_predict_onefa(
       wasmSession /* session pointer */,
